@@ -174,7 +174,7 @@ func expandNamespacePolicy(policy string) []string {
 		NamespaceCapabilityReadScalingPolicy,
 	}
 
-	write := append(read, []string{
+	write := append(read, []string{ //nolint:gocritic
 		NamespaceCapabilityScaleJob,
 		NamespaceCapabilitySubmitJob,
 		NamespaceCapabilityDispatchJob,

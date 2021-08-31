@@ -2834,7 +2834,7 @@ func (c *Client) setGaugeForMemoryStats(nodeID string, hStats *stats.HostStats, 
 // setGaugeForCPUStats proxies metrics for CPU specific statistics
 func (c *Client) setGaugeForCPUStats(nodeID string, hStats *stats.HostStats, baseLabels []metrics.Label) {
 	for _, cpu := range hStats.CPU {
-		labels := append(baseLabels, metrics.Label{
+		labels := append(baseLabels, metrics.Label{ //nolint:gocritic
 			Name:  "cpu",
 			Value: cpu.CPU,
 		})
@@ -2849,7 +2849,7 @@ func (c *Client) setGaugeForCPUStats(nodeID string, hStats *stats.HostStats, bas
 // setGaugeForDiskStats proxies metrics for disk specific statistics
 func (c *Client) setGaugeForDiskStats(nodeID string, hStats *stats.HostStats, baseLabels []metrics.Label) {
 	for _, disk := range hStats.DiskStats {
-		labels := append(baseLabels, metrics.Label{
+		labels := append(baseLabels, metrics.Label{ //nolint:gocritic
 			Name:  "disk",
 			Value: disk.Device,
 		})
@@ -2877,7 +2877,7 @@ func (c *Client) setGaugeForAllocationStats(nodeID string, baseLabels []metrics.
 	metrics.SetGaugeWithLabels([]string{"client", "allocated", "cpu"}, float32(allocated.Flattened.Cpu.CpuShares), baseLabels)
 
 	for _, n := range allocated.Flattened.Networks {
-		labels := append(baseLabels, metrics.Label{
+		labels := append(baseLabels, metrics.Label{ //nolint:gocritic
 			Name:  "device",
 			Value: n.Device,
 		})
@@ -2903,7 +2903,7 @@ func (c *Client) setGaugeForAllocationStats(nodeID string, baseLabels []metrics.
 		}
 
 		unallocatedMbits := n.MBits - usedMbits
-		labels := append(baseLabels, metrics.Label{
+		labels := append(baseLabels, metrics.Label{ //nolint:gocritic
 			Name:  "device",
 			Value: n.Device,
 		})
