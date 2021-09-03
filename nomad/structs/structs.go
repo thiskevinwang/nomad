@@ -2542,6 +2542,7 @@ type NetworkResource struct {
 	Device        string     // Name of the device
 	CIDR          string     // CIDR block of addresses
 	IP            string     // Host IP address
+	Hostname      string     `json:",omitempty"` // Hostname of the network namespace
 	MBits         int        // Throughput
 	DNS           *DNSConfig // DNS Configuration
 	ReservedPorts []Port     // Host Reserved ports
@@ -2550,7 +2551,7 @@ type NetworkResource struct {
 
 func (nr *NetworkResource) Hash() uint32 {
 	var data []byte
-	data = append(data, []byte(fmt.Sprintf("%s%s%s%s%d", nr.Mode, nr.Device, nr.CIDR, nr.IP, nr.MBits))...)
+	data = append(data, []byte(fmt.Sprintf("%s%s%s%s%s%d", nr.Mode, nr.Device, nr.CIDR, nr.IP, nr.Hostname, nr.MBits))...)
 
 	for i, port := range nr.ReservedPorts {
 		data = append(data, []byte(fmt.Sprintf("r%d%s%d%d", i, port.Label, port.Value, port.To))...)
@@ -6349,6 +6350,22 @@ func (tg *TaskGroup) validateNetworks() error {
 						staticPorts[port.Value] = fmt.Sprintf("%s:%s", task.Name, port.Label)
 						staticPortsIndex[hostNetwork] = staticPorts
 					}
+				}
+			}
+		}
+
+		//
+		for _, net := range tg.Networks {
+			switch task.Driver {
+			case "docker":
+				if net.Hostname != "" && net.Mode != "bridge" {
+					mErr.Errors = append(mErr.Errors, fmt.Errorf("Hostname not supported in %s mode", net.Mode))
+					continue
+				}
+			default:
+				if net.Hostname != "" {
+					mErr.Errors = append(mErr.Errors, fmt.Errorf("Hostname not supported by %s driver", task.Driver))
+					continue
 				}
 			}
 		}

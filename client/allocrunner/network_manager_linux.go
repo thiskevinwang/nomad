@@ -92,13 +92,16 @@ func newNetworkManager(alloc *structs.Allocation, driverManager drivermanager.Ma
 // defaultNetworkManager creates a network namespace for the alloc
 type defaultNetworkManager struct{}
 
-func (*defaultNetworkManager) CreateNetwork(allocID string) (*drivers.NetworkIsolationSpec, bool, error) {
-	netns, err := nsutil.NewNS(allocID)
+// CreateNetwork is the CreateNetwork implementation of the
+// drivers.DriverNetworkManager interface function. It does not currently
+// support setting the hostname of the network namespace.
+func (*defaultNetworkManager) CreateNetwork(createSpec *drivers.NetworkCreateRequest) (*drivers.NetworkIsolationSpec, bool, error) {
+	netns, err := nsutil.NewNS(createSpec.AllocID)
 	if err != nil {
 		// when a client restarts, the namespace will already exist and
 		// there will be a namespace file in use by the task process
 		if e, ok := err.(*os.PathError); ok && e.Err == syscall.EPERM {
-			nsPath := path.Join(nsutil.NetNSRunDir, allocID)
+			nsPath := path.Join(nsutil.NetNSRunDir, createSpec.AllocID)
 			_, err := os.Stat(nsPath)
 			if err == nil {
 				return nil, false, nil

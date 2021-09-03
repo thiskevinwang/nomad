@@ -1599,6 +1599,56 @@ func TestTask_Validate_Resources(t *testing.T) {
 	}
 }
 
+func TestNetworkResource_Copy(t *testing.T) {
+	testCases := []struct {
+		inputNetworkResource *NetworkResource
+		name                 string
+	}{
+		{
+			inputNetworkResource: nil,
+			name:                 "nil input check",
+		},
+		{
+			inputNetworkResource: &NetworkResource{
+				Mode:     "bridge",
+				Device:   "eth0",
+				CIDR:     "10.0.0.1/8",
+				IP:       "10.1.1.13",
+				Hostname: "foobar",
+				MBits:    1000,
+				DNS: &DNSConfig{
+					Servers:  []string{"8.8.8.8", "8.8.4.4"},
+					Searches: []string{"example.com"},
+					Options:  []string{"ndot:2"},
+				},
+				ReservedPorts: []Port{
+					{
+						Label:       "foo",
+						Value:       1313,
+						To:          1313,
+						HostNetwork: "private",
+					},
+				},
+				DynamicPorts: []Port{
+					{
+						Label:       "bar",
+						To:          1414,
+						HostNetwork: "public",
+					},
+				},
+			},
+			name: "fully populated input check",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			output := tc.inputNetworkResource.Copy()
+			assert.Equal(t, tc.inputNetworkResource, output, tc.name)
+		})
+	}
+}
+
 func TestTask_Validate_Services(t *testing.T) {
 	s1 := &Service{
 		Name:      "service-name",

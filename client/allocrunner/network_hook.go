@@ -95,8 +95,13 @@ func (h *networkHook) Prerun() error {
 		return nil
 	}
 
-	spec, created, err := h.manager.CreateNetwork(h.alloc.ID)
+	// Our network create request.
+	networkCreateReq := drivers.NetworkCreateRequest{
+		AllocID:  h.alloc.ID,
+		Hostname: tg.Networks[0].Hostname,
+	}
 
+	spec, created, err := h.manager.CreateNetwork(&networkCreateReq)
 	if err != nil {
 		return fmt.Errorf("failed to create network for alloc: %v", err)
 	}
@@ -111,18 +116,31 @@ func (h *networkHook) Prerun() error {
 		if err != nil {
 			return fmt.Errorf("failed to configure networking for alloc: %v", err)
 		}
-		if hostname, ok := spec.Labels[dockerNetSpecLabelKey]; ok {
+
+		// If the driver set the sandbox hostname label, then we will use that
+		// to set the HostsConfig.Hostname. Otherwise, identify the sandbox
+		// container ID which will have been used to set the network namespace
+		// hostname.
+		if hostname, ok := spec.Labels["docker_sandbox_hostname"]; ok {
+			h.spec.HostsConfig = &drivers.HostsConfig{
+				Address:  status.Address,
+				Hostname: hostname,
+			}
+		} else if hostname, ok := spec.Labels[dockerNetSpecLabelKey]; ok {
+
+			// the docker_sandbox_container_id is the full ID of the pause
+			// container, whereas we want the shortened name that dockerd sets
+			// as the pause container's hostname.
 			if len(hostname) > 12 {
-				// the docker_sandbox_container_id is the full ID of the pause
-				// container, whereas we want the shortened name that dockerd
-				// sets as the pause container's hostname
 				hostname = hostname[:12]
 			}
+
 			h.spec.HostsConfig = &drivers.HostsConfig{
 				Address:  status.Address,
 				Hostname: hostname,
 			}
 		}
+
 		h.networkStatusSetter.SetNetworkStatus(status)
 	}
 	return nil
